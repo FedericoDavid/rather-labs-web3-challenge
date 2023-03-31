@@ -1,0 +1,33 @@
+.wrapper {
+  position: fixed;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  height: 120px;
+  width: 100vw;
+  z-index: 9;
+  padding: 0;
+
+  border-bottom: 1px solid rgb(48, 48, 48);
+}
+
+.linkWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+
+  margin: 0;
+  padding: 0;
+}
+
+.buttonWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+
+  margin-right: 32px;
+}
