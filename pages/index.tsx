@@ -1,7 +1,9 @@
 import Head from "next/head";
 
+import HomeContainer from "@/containers/HomeContainer";
 import Layout from "@/components/Layout";
-import Header from "@/components/Header";
+
+import surveyData from "@/constants/home/survey.json";
 
 export default function Home() {
   return (
@@ -14,7 +16,7 @@ export default function Home() {
       </Head>
       <main>
         <Layout>
-          <Header />
+          <HomeContainer survey={surveyData} />
         </Layout>
       </main>
     </>

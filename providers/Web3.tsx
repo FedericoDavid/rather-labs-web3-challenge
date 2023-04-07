@@ -9,12 +9,14 @@ const Web3Context = createContext<{
   quizBalance: number | null;
   connect: () => Promise<void>;
   switchToGoerli: () => Promise<void>;
+  isConnected: () => boolean;
 }>({
   web3: null,
   networkId: null,
   quizBalance: null,
   connect: async () => {},
   switchToGoerli: async () => {},
+  isConnected: () => false,
 });
 
 export const useWeb3 = () => useContext(Web3Context);
@@ -88,12 +90,21 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const isConnected = () => {
+    const { ethereum } = window;
+
+    if (!ethereum) return false;
+
+    return ethereum.selectedAddress !== null;
+  };
+
   const value = {
     web3,
     networkId,
     quizBalance,
     connect,
     switchToGoerli,
+    isConnected,
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
