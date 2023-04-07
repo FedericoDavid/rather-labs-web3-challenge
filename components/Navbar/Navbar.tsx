@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Layout, Button } from "antd";
 
 import { useWeb3 } from "@/providers/Web3";
+
 import styles from "./styles.module.css";
 
 const Navbar = () => {
@@ -21,6 +22,7 @@ const Navbar = () => {
   };
 
   const getAccounts = () => {
+    //move to provider
     if (web3) {
       web3.eth.getAccounts().then((accounts) => {
         setAccounts(accounts);
@@ -47,7 +49,7 @@ const Navbar = () => {
           />
         </Link>
       </div>
-      <div>
+      <>
         {accounts.length > 0 ? (
           <p>Connected to wallet with address: {accounts[0]}</p>
         ) : (
@@ -60,7 +62,7 @@ const Navbar = () => {
             Switch to Goerli
           </Button>
         )}
-      </div>
+      </>
     </Header>
   );
 };

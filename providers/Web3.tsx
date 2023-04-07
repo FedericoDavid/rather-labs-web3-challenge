@@ -24,8 +24,16 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
   const [networkId, setNetworkId] = useState<number | null>(null);
   const [quizBalance, setQuizBalance] = useState<number | null>(null);
 
-  const getQuizBalance = () => {
-    //
+  const getQuizBalance = async (provider: Web3) => {
+    const quiz = new provider.eth.Contract(
+      quizContract,
+      process.env.NEXT_PUBLIC_QUIZ_CONTRACT
+    );
+
+    const accounts = await provider.eth.getAccounts();
+    const quizBalanceOf = await quiz.methods.balanceOf(accounts[0]).call();
+
+    setQuizBalance(parseInt(quizBalanceOf));
   };
 
   const connect = async () => {
@@ -43,17 +51,6 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
 
         setWeb3(web3Instance);
         setNetworkId(networkId);
-
-        const quiz = new web3Instance.eth.Contract(
-          quizContract,
-          "0x437eF217203452317C3C955Cf282b1eE5F6aaF72"
-        );
-        const accounts = await web3Instance.eth.getAccounts();
-        const quizBalanceOf = await quiz.methods
-          .balanceOf(accounts[0])
-          .call({ gas: 600000 });
-        console.log(`QUIZ balance: ${quizBalanceOf}`);
-        setQuizBalance(parseInt(quizBalanceOf));
       } else {
         console.error("No Metamask provider found");
       }
@@ -67,16 +64,18 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
       if (provider && provider.isMetaMask) {
         try {
           const networkId = await provider.request({ method: "net_version" });
-          console.log(networkId, "networkId");
 
-          if (networkId !== 5) {
+          if (parseInt(networkId) !== 5) {
             await provider.request({
               method: "wallet_switchEthereumChain",
               params: [{ chainId: `0x5` }],
             });
 
-            setWeb3(new Web3(provider));
+            const web3Instance = new Web3(provider);
+
+            setWeb3(web3Instance);
             setNetworkId(networkId);
+            getQuizBalance(web3Instance);
           } else {
             console.log("Already connected to Goerli testnet");
           }
