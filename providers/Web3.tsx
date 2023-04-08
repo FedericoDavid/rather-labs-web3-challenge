@@ -3,6 +3,7 @@ import Web3 from "web3";
 
 import { SurveyFormData } from "@/components/modals/Survey/types";
 import quizContract from "../blockchain/contracts/contract";
+import { MessageInstance } from "antd/es/message/interface";
 
 const Web3Context = createContext<{
   web3: Web3 | null;
@@ -12,7 +13,10 @@ const Web3Context = createContext<{
   connect: () => Promise<void>;
   switchToGoerli: () => Promise<void>;
   isConnected: () => boolean;
-  sendSurvey: (answersData: SurveyFormData) => void;
+  sendSurvey: (
+    answersData: SurveyFormData,
+    messageApi: MessageInstance
+  ) => void;
 }>({
   web3: null,
   networkId: null,
@@ -66,13 +70,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const isConnected = () => {
-    const { ethereum } = window;
-
-    if (!ethereum) return false;
-
-    return ethereum.selectedAddress !== null;
-  };
+  const isConnected = () => accounts.length > 0;
 
   const switchToGoerli = async () => {
     if (typeof window !== "undefined") {
@@ -105,7 +103,10 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const sendSurvey = async (answersData: SurveyFormData) => {
+  const sendSurvey = async (
+    answersData: SurveyFormData,
+    messageApi: MessageInstance
+  ) => {
     try {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
@@ -141,6 +142,8 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
 
         getQuizBalance(provider);
         console.log("Transaction hash:", txHash);
+
+        messageApi.success("Thanks to participate on our daily surveys!");
       }
     } catch (error) {
       console.error(error);

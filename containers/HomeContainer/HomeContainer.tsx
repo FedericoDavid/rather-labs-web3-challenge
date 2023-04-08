@@ -36,8 +36,11 @@ const HomeContainer = ({ survey }: HomeContainerType) => {
   const onSubmit = (answersData: SurveyFormData) => {
     if (!answersData) return;
 
-    sendSurvey(answersData);
-    console.log(answersData, "formData");
+    try {
+      sendSurvey(answersData, messageApi);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (

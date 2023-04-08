@@ -63,21 +63,23 @@ const SurveyModal = ({
   };
 
   useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setTimeLeft((prevTimeLeft) => {
-        if (prevTimeLeft === 0) {
-          clearInterval(timeInterval);
-          handleFinish(formData);
+    if (visible) {
+      const timeInterval = setInterval(() => {
+        setTimeLeft((prevTimeLeft) => {
+          if (prevTimeLeft === 0) {
+            clearInterval(timeInterval);
+            handleFinish(formData);
 
-          return prevTimeLeft;
-        } else {
-          return prevTimeLeft - 1;
-        }
-      });
-    }, 1000);
+            return prevTimeLeft;
+          } else {
+            return prevTimeLeft - 1;
+          }
+        });
+      }, 1000);
 
-    return () => clearInterval(timeInterval);
-  }, [formData]);
+      return () => clearInterval(timeInterval);
+    }
+  }, [formData, visible]);
 
   return (
     <Modal open={visible} onCancel={resetForm} footer={null} closable centered>
