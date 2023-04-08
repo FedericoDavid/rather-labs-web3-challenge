@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 
 import Survey from "@/components/modals/Survey";
+import { SurveyFormData } from "@/components/modals/Survey/types";
 import { useWeb3 } from "@/providers/Web3";
 import { HomeContainerType } from "./types";
 
@@ -16,7 +17,7 @@ import styles from "./styles.module.css";
 const HomeContainer = ({ survey }: HomeContainerType) => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const { isConnected } = useWeb3();
+  const { isConnected, sendSurvey } = useWeb3();
   const { title, image } = survey;
 
   const { Title } = Typography;
@@ -30,6 +31,13 @@ const HomeContainer = ({ survey }: HomeContainerType) => {
     } else {
       messageApi.info("Need to connect your wallet on Metamask before start!");
     }
+  };
+
+  const onSubmit = (answersData: SurveyFormData) => {
+    if (!answersData) return;
+
+    sendSurvey(answersData);
+    console.log(answersData, "formData");
   };
 
   return (
@@ -77,7 +85,12 @@ const HomeContainer = ({ survey }: HomeContainerType) => {
           </div>
         </Col>
       </Row>
-      <Survey visible={modalVisible} onCancel={handleModal} survey={survey} />
+      <Survey
+        visible={modalVisible}
+        onCancel={handleModal}
+        survey={survey}
+        onSubmit={onSubmit}
+      />
     </div>
   );
 };

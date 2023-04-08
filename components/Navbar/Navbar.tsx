@@ -8,8 +8,7 @@ import { useWeb3 } from "@/providers/Web3";
 import styles from "./styles.module.css";
 
 const Navbar = () => {
-  const [accounts, setAccounts] = useState<string[]>([]);
-  const { web3, networkId, connect, switchToGoerli } = useWeb3();
+  const { networkId, connect, switchToGoerli, accounts } = useWeb3();
 
   const { Header } = Layout;
 
@@ -20,20 +19,6 @@ const Navbar = () => {
   const switchToGoerliIfNeeded = async () => {
     await switchToGoerli();
   };
-
-  const getAccounts = () => {
-    //move to provider
-    if (web3) {
-      web3.eth.getAccounts().then((accounts) => {
-        setAccounts(accounts);
-        console.log(accounts, "accounts");
-      });
-    }
-  };
-
-  useEffect(() => {
-    getAccounts();
-  }, [web3]);
 
   return (
     <Header className={styles.wrapper}>
@@ -50,7 +35,7 @@ const Navbar = () => {
         </Link>
       </div>
       <>
-        {accounts.length > 0 ? (
+        {accounts && accounts.length > 0 ? (
           <p>Connected to wallet with address: {accounts[0]}</p>
         ) : (
           <Button type="primary" onClick={connectToWallet}>
