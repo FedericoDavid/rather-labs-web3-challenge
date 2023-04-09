@@ -163,9 +163,11 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
           }
         );
 
+        const gasPrice = await provider.eth.getGasPrice();
+
         const params = {
           from: accounts[0],
-          gasPrice: "0x0",
+          gasPrice: gasPrice,
           gas: "0x7a120",
           value: "0x0",
           data: contract.methods.submit(1, answersArray).encodeABI(),
