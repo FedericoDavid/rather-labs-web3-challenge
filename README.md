@@ -2,7 +2,10 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Rather labs Front end web3 Challenge 🐱‍🏍🚀
 
-### Project made with Next js, Typescript, web3.js, React Hooks and Antd on design side
+### ✔ Project made with Next js, Typescript, web3.js, React Hooks and Antd on design side
+
+### 🌎 Deployed version on Vercel:
+#### [Rather Labs Web3 Challenge](https://rather-labs-web3-challenge.vercel.app/)
 
 First, run the development server:
 
