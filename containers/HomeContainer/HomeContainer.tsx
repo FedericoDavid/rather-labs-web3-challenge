@@ -17,7 +17,7 @@ import styles from "./styles.module.css";
 const HomeContainer = ({ survey }: HomeContainerType) => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const { isConnected, sendSurvey, txHash } = useWeb3();
+  const { isConnected, sendSurvey } = useWeb3();
   const { title, image } = survey;
 
   const [messageApi, contextHolder] = message.useMessage();
