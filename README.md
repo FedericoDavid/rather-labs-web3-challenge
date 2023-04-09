@@ -1,6 +1,8 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+## Rather labs Front end web3 Challenge 🐱‍🏍🚀
+
+### Project made with Next js, Typescript, web3.js, React Hooks and Antd on design side
 
 First, run the development server:
 
@@ -10,6 +12,14 @@ npm run dev
 yarn dev
 # or
 pnpm dev
+```
+
+here the.env.local to run project:
+
+```NEXT_PUBLIC_GOERLI_TESTNET=5
+NEXT_PUBLIC_MAINNET=1
+NEXT_PUBLIC_QUIZ_CONTRACT=0x437eF217203452317C3C955Cf282b1eE5F6aaF72
+NEXT_PUBLIC_ETHEREUM_TX_SCAN=https://goerli.etherscan.io/tx
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
