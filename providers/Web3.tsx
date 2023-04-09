@@ -1,9 +1,16 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import Web3 from "web3";
 
 import { SurveyFormData } from "@/components/modals/Survey/types";
-import quizContract from "../blockchain/contracts/contract";
 import { MessageInstance } from "antd/es/message/interface";
+
+import quizContract from "../blockchain/contracts/contract";
 
 const Web3Context = createContext<{
   web3: Web3 | null;
@@ -36,18 +43,35 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
   const [quizBalance, setQuizBalance] = useState<number | null>(null);
   const [accounts, setAccounts] = useState<string[]>([]);
 
-  const getQuizBalance = async (provider: Web3, account?: string) => {
-    const quiz = new provider.eth.Contract(
-      quizContract,
-      process.env.NEXT_PUBLIC_QUIZ_CONTRACT
-    );
+  const getProvider = () => {
+    if (typeof window === "undefined") {
+      return null;
+    }
 
-    const quizBalanceOf = await quiz.methods
-      .balanceOf(account || accounts[0])
-      .call();
+    const provider = window.ethereum;
 
-    setQuizBalance(parseInt(quizBalanceOf));
+    if (!provider || !provider.isMetaMask) {
+      return null;
+    }
+
+    return provider;
   };
+
+  const getQuizBalance = useCallback(
+    async (provider: Web3, account?: string) => {
+      const quiz = new provider.eth.Contract(
+        quizContract,
+        process.env.NEXT_PUBLIC_QUIZ_CONTRACT
+      );
+
+      const quizBalanceOf = await quiz.methods
+        .balanceOf(account || accounts[0])
+        .call();
+
+      setQuizBalance(parseInt(quizBalanceOf));
+    },
+    [accounts]
+  );
 
   const getNetworkId = async () => {
     if (typeof window !== "undefined") {
@@ -64,58 +88,57 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const connect = async () => {
-    if (typeof window !== "undefined") {
-      const provider = (window as any).ethereum;
+    const provider = getProvider();
 
-      if (provider && provider.isMetaMask) {
-        await provider.request({ method: "eth_requestAccounts" });
-
-        const web3Instance = new Web3(provider);
-
-        const accounts = await web3Instance.eth.getAccounts();
-
-        setAccounts(accounts);
-        setWeb3(web3Instance);
-
-        getQuizBalance(web3Instance, accounts[0]);
-      } else {
-        console.error("No Metamask provider found");
-      }
+    if (!provider) {
+      console.error("No Metamask provider found");
+      return;
     }
+
+    await provider.request({ method: "eth_requestAccounts" });
+
+    const web3Instance = new Web3(provider);
+
+    const accounts = await web3Instance.eth.getAccounts();
+
+    setAccounts(accounts);
+    setWeb3(web3Instance);
+
+    getQuizBalance(web3Instance, accounts[0]);
   };
 
   const isConnected = () => accounts.length > 0;
 
   const switchToGoerli = async () => {
-    if (typeof window !== "undefined") {
-      const provider = (window as any).ethereum;
+    const provider = getProvider();
 
-      if (provider && provider.isMetaMask) {
-        try {
-          if (
-            networkId &&
-            networkId.toString() !== process.env.NEXT_PUBLIC_GOERLI_TESTNET
-          ) {
-            await provider.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: `0x5` }],
-            });
+    if (!provider) {
+      console.error("No Metamask provider found");
+      return;
+    }
 
-            const web3Instance = new Web3(provider);
+    try {
+      if (
+        networkId &&
+        networkId.toString() !== process.env.NEXT_PUBLIC_GOERLI_TESTNET
+      ) {
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: `0x5` }],
+        });
 
-            setWeb3(web3Instance);
-            setNetworkId(networkId);
-            getQuizBalance(web3Instance);
-            getNetworkId();
-          } else {
-            console.log("Already connected to Goerli testnet");
-          }
-        } catch (error) {
-          console.error(error);
-        }
+        const web3Instance = new Web3(provider);
+
+        setWeb3(web3Instance);
+
+        setNetworkId(networkId);
+        getQuizBalance(web3Instance);
+        getNetworkId();
       } else {
-        console.error("No Metamask provider found");
+        console.log("Already connected to Goerli testnet");
       }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -123,41 +146,42 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     answersData: SurveyFormData,
     messageApi: MessageInstance
   ) => {
+    const provider = getProvider();
+
+    if (!provider) {
+      console.error("No Metamask provider found");
+      return;
+    }
+
     try {
-      const provider = new Web3(window.ethereum);
+      const contract = new provider.eth.Contract(
+        quizContract,
+        process.env.NEXT_PUBLIC_QUIZ_CONTRACT
+      );
 
-      if (provider) {
-        const contract = new provider.eth.Contract(
-          quizContract,
-          process.env.NEXT_PUBLIC_QUIZ_CONTRACT
-        );
+      const answersArray = Object.values(answersData).map((answer: string) => {
+        const parsed = parseInt(answer, 10);
+        return Number.isInteger(parsed) ? parsed : 0;
+      });
 
-        const answersArray = Object.values(answersData).map(
-          (answer: string) => {
-            const parsed = parseInt(answer, 10);
-            return Number.isInteger(parsed) ? parsed : 0;
-          }
-        );
+      const params = {
+        from: accounts[0],
+        gasPrice: "0x0",
+        gas: "0x7a120",
+        value: "0x0",
+        data: contract.methods.submit(1, answersArray).encodeABI(),
+      };
 
-        const params = {
-          from: accounts[0],
-          gasPrice: "0x0",
-          gas: "0x7a120",
-          value: "0x0",
-          data: contract.methods.submit(1, answersArray).encodeABI(),
-        };
+      const txHash = await provider.request({
+        method: "eth_sendTransaction",
+        params: [params],
+      });
 
-        const txHash = await window.ethereum.request({
-          method: "eth_sendTransaction",
-          params: [params],
-        });
+      getQuizBalance(provider);
 
-        getQuizBalance(provider);
+      messageApi.success("Thanks to participate on our daily surveys!");
 
-        messageApi.success("Thanks to participate on our daily surveys!");
-
-        console.log("Transaction hash:", txHash);
-      }
+      console.log("Transaction hash:", txHash);
     } catch (error) {
       console.error(error);
     }
