@@ -8,7 +8,6 @@ import {
 import Web3 from "web3";
 
 import { SurveyFormData } from "@/components/modals/Survey/types";
-import { MessageInstance } from "antd/es/message/interface";
 
 import quizContract from "../blockchain/contracts/contract";
 
@@ -17,18 +16,17 @@ const Web3Context = createContext<{
   networkId: number | null;
   quizBalance: number | null;
   accounts: string[] | null;
+  txHash: string | null;
   connect: () => Promise<void>;
   switchToGoerli: () => Promise<void>;
   isConnected: () => boolean;
-  sendSurvey: (
-    answersData: SurveyFormData,
-    messageApi: MessageInstance
-  ) => void;
+  sendSurvey: (answersData: SurveyFormData) => void;
 }>({
   web3: null,
   networkId: null,
   quizBalance: null,
   accounts: null,
+  txHash: null,
   connect: async () => {},
   switchToGoerli: async () => {},
   isConnected: () => false,
@@ -42,6 +40,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
   const [networkId, setNetworkId] = useState<number | null>(null);
   const [quizBalance, setQuizBalance] = useState<number | null>(null);
   const [accounts, setAccounts] = useState<string[]>([]);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const getProvider = () => {
     if (typeof window === "undefined") {
@@ -62,7 +61,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     networkId.toString() === process.env.NEXT_PUBLIC_GOERLI_TESTNET;
 
   const getQuizBalance = useCallback(
-    async (provider: Web3, account?: string) => {
+    async (provider: Web3, account?: string): Promise<void> => {
       const quiz = new provider.eth.Contract(
         quizContract,
         process.env.NEXT_PUBLIC_QUIZ_CONTRACT
@@ -77,7 +76,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     [accounts]
   );
 
-  const getNetworkId = async () => {
+  const getNetworkId = async (): Promise<void> => {
     if (typeof window !== "undefined") {
       const provider = (window as any).ethereum;
 
@@ -91,7 +90,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const connect = async () => {
+  const connect = async (): Promise<void> => {
     const provider = getProvider();
 
     if (!provider) {
@@ -115,7 +114,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
 
   const isConnected = () => accounts.length > 0;
 
-  const switchToGoerli = async () => {
+  const switchToGoerli = async (): Promise<void> => {
     const provider = getProvider();
 
     if (!provider) {
@@ -145,46 +144,41 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const sendSurvey = async (
-    answersData: SurveyFormData,
-    messageApi: MessageInstance
-  ) => {
-    const provider = getProvider();
-
-    if (!provider) {
-      console.error("No Metamask provider found");
-      return;
-    }
+  const sendSurvey = async (answersData: SurveyFormData): Promise<void> => {
+    setTxHash(null);
 
     try {
-      const contract = new provider.eth.Contract(
-        quizContract,
-        process.env.NEXT_PUBLIC_QUIZ_CONTRACT
-      );
+      const provider = new Web3(window.ethereum);
 
-      const answersArray = Object.values(answersData).map((answer: string) => {
-        const parsed = parseInt(answer, 10);
-        return Number.isInteger(parsed) ? parsed : 0;
-      });
+      if (provider) {
+        const contract = new provider.eth.Contract(
+          quizContract,
+          process.env.NEXT_PUBLIC_QUIZ_CONTRACT
+        );
 
-      const params = {
-        from: accounts[0],
-        gasPrice: "0x0",
-        gas: "0x7a120",
-        value: "0x0",
-        data: contract.methods.submit(1, answersArray).encodeABI(),
-      };
+        const answersArray = Object.values(answersData).map(
+          (answer: string) => {
+            const parsed = parseInt(answer, 10);
+            return Number.isInteger(parsed) ? parsed : 0;
+          }
+        );
 
-      const txHash = await provider.request({
-        method: "eth_sendTransaction",
-        params: [params],
-      });
+        const params = {
+          from: accounts[0],
+          gasPrice: "0x0",
+          gas: "0x7a120",
+          value: "0x0",
+          data: contract.methods.submit(1, answersArray).encodeABI(),
+        };
 
-      getQuizBalance(provider);
+        const transactionHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [params],
+        });
 
-      messageApi.success("Thanks to participate on our daily surveys!");
-
-      console.log("Transaction hash:", txHash);
+        setTxHash(transactionHash);
+        getQuizBalance(provider);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -199,6 +193,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     networkId,
     quizBalance,
     accounts,
+    txHash,
     connect,
     switchToGoerli,
     isConnected,

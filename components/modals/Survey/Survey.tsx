@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import React, { ReactElement, useEffect, useState } from "react";
 import { Modal, Form, Radio, Button, Typography } from "antd";
+import Image from "next/image";
 
+import truncateWallet from "@/utils/trucateWallet";
+import { useWeb3 } from "@/providers/Web3";
 import { SurveyModalType, SurveyFormData } from "./types";
 import { QuestionOptionsType, QuestionType } from "@/types/home";
 
@@ -23,6 +25,8 @@ const SurveyModal = ({
 
   const [form] = Form.useForm();
   const { Title } = Typography;
+
+  const { txHash } = useWeb3();
 
   const question: QuestionType = survey.questions[currentQuestion];
 
@@ -56,10 +60,14 @@ const SurveyModal = ({
   const handleOnSubmit = (answersData: SurveyFormData) => {
     setIsLoading(true);
 
-    onSubmit(answersData);
-    resetForm();
+    try {
+      onSubmit(answersData);
 
-    setIsLoading(false);
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -80,6 +88,63 @@ const SurveyModal = ({
       return () => clearInterval(timeInterval);
     }
   }, [formData, visible]);
+
+  const FinalSteps = (): ReactElement => {
+    return (
+      <div className={styles.wrapper}>
+        {!txHash ? (
+          <>
+            <Title level={3}>Your answers: </Title>
+            {survey.questions.map(
+              (question: QuestionOptionsType, index: number) => (
+                <p className={styles.answers} key={index}>
+                  <strong>{question.text}: </strong>
+                  {formData[`question${index}`]}
+                </p>
+              )
+            )}
+            <Button
+              type="primary"
+              style={{
+                marginTop: "12px",
+                boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.1)",
+              }}
+              onClick={() => handleOnSubmit(formData)}
+              loading={isLoading}
+            >
+              Submit
+            </Button>
+          </>
+        ) : (
+          <>
+            <Title level={3}>Thanks to participate! 🎉 </Title>
+            <p className={styles.answers}>
+              You can check your transaction on a few minutes on etherscan:
+            </p>
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href={`${process.env.NEXT_PUBLIC_ETHEREUM_TX_SCAN}/${txHash}`}
+              className={styles.link}
+            >
+              {truncateWallet(txHash)}
+            </a>
+            <Button
+              type="primary"
+              style={{
+                marginTop: "12px",
+                boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.1)",
+              }}
+              onClick={resetForm}
+              loading={isLoading}
+            >
+              Close
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Modal open={visible} onCancel={resetForm} footer={null} closable centered>
@@ -124,25 +189,7 @@ const SurveyModal = ({
           </div>
         </Form>
       ) : (
-        <div className={styles.wrapper}>
-          <Title level={3}>Your answers: </Title>
-          {survey.questions.map(
-            (question: QuestionOptionsType, index: number) => (
-              <p className={styles.answers} key={index}>
-                <strong>{question.text}: </strong>
-                {formData[`question${index}`]}
-              </p>
-            )
-          )}
-          <Button
-            type="primary"
-            style={{ marginTop: "12px" }}
-            onClick={() => handleOnSubmit(formData)}
-            loading={isLoading}
-          >
-            Submit
-          </Button>
-        </div>
+        <FinalSteps />
       )}
     </Modal>
   );
