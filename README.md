@@ -1,4 +1,5 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+![rather-labs-challenge](https://user-images.githubusercontent.com/69057485/230788613-ab43552f-b21e-468b-be69-8d9c8137f899.jpg)
+
 
 ## Rather labs Front end web3 Challenge 🐱‍🏍🚀
 
