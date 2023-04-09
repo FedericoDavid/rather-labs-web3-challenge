@@ -36,8 +36,8 @@ const SurveyModal = ({
     onCancel();
   };
 
-  const handleFinish = (values: SurveyFormData) => {
-    const updatedFormData = { ...formData, ...values };
+  const handleFinish = (answersData: SurveyFormData) => {
+    const updatedFormData = { ...formData, ...answersData };
 
     if (updatedFormData[`question${currentQuestion}`] === undefined) {
       updatedFormData[`question${currentQuestion}`] = "Unanswered in time";
@@ -53,10 +53,10 @@ const SurveyModal = ({
     }
   };
 
-  const handleOnSubmit = (values: SurveyFormData) => {
+  const handleOnSubmit = (answersData: SurveyFormData) => {
     setIsLoading(true);
 
-    onSubmit(values);
+    onSubmit(answersData);
     resetForm();
 
     setIsLoading(false);

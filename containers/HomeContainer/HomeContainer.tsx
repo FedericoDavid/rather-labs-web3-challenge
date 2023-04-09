@@ -20,8 +20,8 @@ const HomeContainer = ({ survey }: HomeContainerType) => {
   const { isConnected, sendSurvey } = useWeb3();
   const { title, image } = survey;
 
-  const { Title } = Typography;
   const [messageApi, contextHolder] = message.useMessage();
+  const { Title } = Typography;
 
   const handleModal = () => setModalVisible(!modalVisible);
 

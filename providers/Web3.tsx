@@ -57,6 +57,10 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     return provider;
   };
 
+  const isGoerli = () =>
+    networkId &&
+    networkId.toString() === process.env.NEXT_PUBLIC_GOERLI_TESTNET;
+
   const getQuizBalance = useCallback(
     async (provider: Web3, account?: string) => {
       const quiz = new provider.eth.Contract(
@@ -104,7 +108,9 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     setAccounts(accounts);
     setWeb3(web3Instance);
 
-    getQuizBalance(web3Instance, accounts[0]);
+    if (isGoerli()) {
+      getQuizBalance(web3Instance, accounts[0]);
+    }
   };
 
   const isConnected = () => accounts.length > 0;
@@ -118,10 +124,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      if (
-        networkId &&
-        networkId.toString() !== process.env.NEXT_PUBLIC_GOERLI_TESTNET
-      ) {
+      if (!isGoerli()) {
         await provider.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x5` }],
