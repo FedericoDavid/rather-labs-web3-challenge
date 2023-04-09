@@ -1,0 +1,39 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 100vw;
+  padding: 18px 24px;
+
+  background-color: transparent;
+  z-index: 99;
+  overflow: hidden;
+
+  scroll-snap-align: end;
+  border-top: 1px solid #c2c2c2;
+}
+
+.socialWrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.socialLink {
+  margin: 8px;
+
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+}

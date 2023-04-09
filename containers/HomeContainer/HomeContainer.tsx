@@ -80,7 +80,10 @@ const HomeContainer = ({ survey }: HomeContainerType) => {
             />
             <Button
               type="primary"
-              style={{ marginTop: "12px" }}
+              style={{
+                marginTop: "12px",
+                boxShadow: "0px 8px 15px rgba(0, 0, 0, 0.1)",
+              }}
               onClick={handleStartSurvey}
             >
               Start now!

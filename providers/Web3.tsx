@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import Web3 from "web3";
 
 import { SurveyFormData } from "@/components/modals/Survey/types";
@@ -36,15 +36,31 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
   const [quizBalance, setQuizBalance] = useState<number | null>(null);
   const [accounts, setAccounts] = useState<string[]>([]);
 
-  const getQuizBalance = async (provider: Web3) => {
+  const getQuizBalance = async (provider: Web3, account?: string) => {
     const quiz = new provider.eth.Contract(
       quizContract,
       process.env.NEXT_PUBLIC_QUIZ_CONTRACT
     );
 
-    const quizBalanceOf = await quiz.methods.balanceOf(accounts[0]).call();
+    const quizBalanceOf = await quiz.methods
+      .balanceOf(account || accounts[0])
+      .call();
 
     setQuizBalance(parseInt(quizBalanceOf));
+  };
+
+  const getNetworkId = async () => {
+    if (typeof window !== "undefined") {
+      const provider = (window as any).ethereum;
+
+      if (provider) {
+        const web3Instance = new Web3(provider);
+
+        const networkId = await web3Instance.eth.net.getId();
+
+        setNetworkId(networkId);
+      }
+    }
   };
 
   const connect = async () => {
@@ -56,14 +72,12 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
 
         const web3Instance = new Web3(provider);
 
-        const networkId = await web3Instance.eth.net.getId();
         const accounts = await web3Instance.eth.getAccounts();
-
-        console.log(networkId);
 
         setAccounts(accounts);
         setWeb3(web3Instance);
-        setNetworkId(networkId);
+
+        getQuizBalance(web3Instance, accounts[0]);
       } else {
         console.error("No Metamask provider found");
       }
@@ -78,9 +92,10 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
 
       if (provider && provider.isMetaMask) {
         try {
-          const networkId = await provider.request({ method: "net_version" });
-
-          if (parseInt(networkId) !== 5) {
+          if (
+            networkId &&
+            networkId.toString() !== process.env.NEXT_PUBLIC_GOERLI_TESTNET
+          ) {
             await provider.request({
               method: "wallet_switchEthereumChain",
               params: [{ chainId: `0x5` }],
@@ -91,6 +106,7 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
             setWeb3(web3Instance);
             setNetworkId(networkId);
             getQuizBalance(web3Instance);
+            getNetworkId();
           } else {
             console.log("Already connected to Goerli testnet");
           }
@@ -108,10 +124,6 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     messageApi: MessageInstance
   ) => {
     try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
       const provider = new Web3(window.ethereum);
 
       if (provider) {
@@ -141,14 +153,19 @@ export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
         });
 
         getQuizBalance(provider);
-        console.log("Transaction hash:", txHash);
 
         messageApi.success("Thanks to participate on our daily surveys!");
+
+        console.log("Transaction hash:", txHash);
       }
     } catch (error) {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    getNetworkId();
+  }, []);
 
   const value = {
     web3,
